@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/old-blog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/old-blog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/old-blog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/old-blog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/old-blog/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"zhzhzhy.github.io","root":"/old-blog/","images":"/old-blog/images","scheme":"Pisces","version":"8.3.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+<meta name="description" content="国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n 的supernode地址：ustc.gq:2000 或 ngrok.iok.la:2000协议版本:n2n_v2          端口:2000补充：什么是n2n?n2n内网穿透神器n2n用途假如想实现远程访问，访问家里的路由、电脑，等等设备，最简单的方式就是采用端口映射（端口转发），但是很多情况下我">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自建n2n supernode (国内n2n supernode)">
+<meta property="og:url" content="https://zhzhzhy.github.io/old-blog/2016/09/28/history/%E8%87%AA%E5%BB%BAn2n-supernode-%E5%9B%BD%E5%86%85n2n-supernode/index.html">
+<meta property="og:site_name" content="ZhZhY的博客 | ZhZhY&#39;s">
+<meta property="og:description" content="国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n 的supernode地址：ustc.gq:2000 或 ngrok.iok.la:2000协议版本:n2n_v2          端口:2000补充：什么是n2n?n2n内网穿透神器n2n用途假如想实现远程访问，访问家里的路由、电脑，等等设备，最简单的方式就是采用端口映射（端口转发），但是很多情况下我">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/1.png">
+<meta property="og:image" content="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/2.jpg">
+<meta property="og:image" content="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/20150211114821.png">
+<meta property="article:published_time" content="2016-09-28T12:19:28.000Z">
+<meta property="article:modified_time" content="2021-04-15T04:29:12.385Z">
+<meta property="article:author" content="ZhZhy">
+<meta property="article:tag" content="技术分享">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="linux技术">
+<meta property="article:tag" content="技术">
+<meta property="article:tag" content="域名建站">
+<meta property="article:tag" content="nanopi相关">
+<meta property="article:tag" content="n2n">
+<meta property="article:tag" content="内网穿透">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/1.png">
+
+
+<link rel="canonical" href="https://zhzhzhy.github.io/old-blog/2016/09/28/history/%E8%87%AA%E5%BB%BAn2n-supernode-%E5%9B%BD%E5%86%85n2n-supernode/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+<title>自建n2n supernode (国内n2n supernode) | ZhZhY的博客 | ZhZhY's</title>
+  
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/old-blog/atom.xml" title="ZhZhY的博客 | ZhZhY's" type="application/atom+xml"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/old-blog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">ZhZhY的博客 | ZhZhY's</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">愿你出走半生，归来仍是少年</p>
+      <img class="custom-logo-image" src="/old-blog/%5Bobject%20Object%5D" alt="ZhZhY的博客 | ZhZhY's">
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-主页-home"><a href="/old-blog/" rel="section"><i class="home fa-fw"></i>主页 Home</a></li>
+        <li class="menu-item menu-item-关于我-about"><a href="/old-blog/about/" rel="section"><i class="user fa-fw"></i>关于我 About</a></li>
+        <li class="menu-item menu-item-相册-photo"><a href="https://zhzhy.tuchong.com/" rel="noopener" target="_blank"><i class="photo fa-fw"></i>相册 Photo</a></li>
+        <li class="menu-item menu-item-标签-tags"><a href="/old-blog/tags/" rel="section"><i class="tags fa-fw"></i>标签 Tags</a></li>
+        <li class="menu-item menu-item-分类-category"><a href="/old-blog/categories/" rel="section"><i class="th fa-fw"></i>分类 Category</a></li>
+        <li class="menu-item menu-item-回望我的过去-archives"><a href="/old-blog/archives/" rel="section"><i class="archive fa-fw"></i>回望我的过去 Archives</a></li>
+        <li class="menu-item menu-item-小工具-tools"><a href="/old-blog/tools/" rel="section"><i class="heartbeat fa-fw"></i>小工具 Tools</a></li>
+        <li class="menu-item menu-item-sitemap"><a href="/old-blog/sitemap.xml" rel="section"><i class="sitemap fa-fw"></i>Sitemap</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BD%E5%A4%96%E7%9A%84supernode%E6%85%A2%EF%BC%8C%E5%BB%B6%E8%BF%9F%E9%83%BD%E5%BF%AB1s%E4%BA%86%EF%BC%8Cssh%E6%89%93%E5%AD%97%E9%83%BD%E5%8D%A1%EF%BC%8C%E5%80%9F%E5%8A%A9%E5%BC%80%E6%BA%90%E7%A1%AC%E4%BB%B6%EF%BC%8C%E5%9C%A8%E5%AE%B6%E8%87%AA%E5%BB%BA%E4%BA%86%E4%B8%80%E4%B8%AAn2n-%E7%9A%84supernode"><span class="nav-number">1.</span> <span class="nav-text">国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n 的supernode</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%B0%E5%9D%80%EF%BC%9Austc-gq-2000-%E6%88%96-ngrok-iok-la-2000"><span class="nav-number"></span> <span class="nav-text">地址：ustc.gq:2000 或 ngrok.iok.la:2000</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%8F%E8%AE%AE%E7%89%88%E6%9C%AC-n2n-v2-%E7%AB%AF%E5%8F%A3-2000"><span class="nav-number"></span> <span class="nav-text">协议版本:n2n_v2          端口:2000</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A1%A5%E5%85%85%EF%BC%9A%E4%BB%80%E4%B9%88%E6%98%AFn2n"><span class="nav-number">0.0.1.</span> <span class="nav-text">补充：什么是n2n?</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#n2n%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E7%A5%9E%E5%99%A8"><span class="nav-number"></span> <span class="nav-text">n2n内网穿透神器</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#n2n%E7%94%A8%E9%80%94"><span class="nav-number"></span> <span class="nav-text">n2n用途</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEN2N"><span class="nav-number"></span> <span class="nav-text">配置N2N</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%AF%E7%94%A8N2N"><span class="nav-number"></span> <span class="nav-text">启用N2N</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E7%94%A8%E4%B8%AD%E5%BF%83%E8%8A%82%E7%82%B9-supernode"><span class="nav-number">1.</span> <span class="nav-text">启用中心节点(supernode)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E7%94%A8%E8%BE%B9%E7%BC%98%E8%8A%82%E7%82%B9-edge"><span class="nav-number">2.</span> <span class="nav-text">启用边缘节点(edge)</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E5%8F%AF%E8%83%BD%E9%81%87%E5%88%B0%E7%9A%84%E9%94%99%E8%AF%AF"><span class="nav-number"></span> <span class="nav-text">关于可能遇到的错误</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#n2n%E4%BB%8B%E7%BB%8D%E6%96%87%E7%AB%A0%E8%BD%AC%E8%BD%BD%E8%87%AAhttps-www-phpbulo-com-archives-655-html-%E7%89%B9%E6%AD%A4%E6%84%9F%E8%B0%A2"><span class="nav-number">0.0.1.</span> <span class="nav-text">n2n介绍文章转载自https:&#x2F;&#x2F;www.phpbulo.com&#x2F;archives&#x2F;655.html,特此感谢</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number">0.1.</span> <span class="nav-text"></span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">ZhZhy</p>
+  <div class="site-description" itemprop="description">geek猫，中国科大14级，南七技校工科男一枚。不知名博主，擅长linux运维，爱好摄影，歌风民谣，专业力学</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/old-blog/archives">
+          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/old-blog/categories/">
+        <span class="site-state-item-count">74</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/old-blog/tags/">
+        <span class="site-state-item-count">67</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhzhzhy" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhzhzhy" rel="noopener" target="_blank"><i class="github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:by6dx1@gmail.com" title="E-Mail → mailto:by6dx1@gmail.com" rel="noopener" target="_blank"><i class="envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://instagram.com/geek.cat.zzy" title="Instagram → https:&#x2F;&#x2F;instagram.com&#x2F;geek.cat.zzy" rel="noopener" target="_blank"><i class="instagram fa-fw"></i>Instagram</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://open.spotify.com/artist/2fbUQIKSBTohTK6tHaFGYV?si=A2OzzFvPTjOVYcHiilCOWA" title="Spotify → https:&#x2F;&#x2F;open.spotify.com&#x2F;artist&#x2F;2fbUQIKSBTohTK6tHaFGYV?si&#x3D;A2OzzFvPTjOVYcHiilCOWA" rel="noopener" target="_blank">Spotify</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://zhzhzhy.github.io/old-blog/2016/09/28/history/%E8%87%AA%E5%BB%BAn2n-supernode-%E5%9B%BD%E5%86%85n2n-supernode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/old-blog/images/avatar.gif">
+      <meta itemprop="name" content="ZhZhy">
+      <meta itemprop="description" content="geek猫，中国科大14级，南七技校工科男一枚。不知名博主，擅长linux运维，爱好摄影，歌风民谣，专业力学">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhZhY的博客 | ZhZhY's">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自建n2n supernode (国内n2n supernode)
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2016-09-28 12:19:28" itemprop="dateCreated datePublished" datetime="2016-09-28T12:19:28+00:00">2016-09-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/old-blog/categories/linux%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">linux技术</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/old-blog/categories/linux%E6%8A%80%E6%9C%AF/nanopi%E7%9B%B8%E5%85%B3/" itemprop="url" rel="index"><span itemprop="name">nanopi相关</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/old-blog/categories/linux%E6%8A%80%E6%9C%AF/nanopi%E7%9B%B8%E5%85%B3/%E5%9F%9F%E5%90%8D%E5%BB%BA%E7%AB%99/" itemprop="url" rel="index"><span itemprop="name">域名建站</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/old-blog/categories/linux%E6%8A%80%E6%9C%AF/nanopi%E7%9B%B8%E5%85%B3/%E5%9F%9F%E5%90%8D%E5%BB%BA%E7%AB%99/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/" itemprop="url" rel="index"><span itemprop="name">技术分享</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/old-blog/2016/09/28/history/%E8%87%AA%E5%BB%BAn2n-supernode-%E5%9B%BD%E5%86%85n2n-supernode/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/09/28/history/自建n2n-supernode-国内n2n-supernode/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n-的supernode"><a href="#国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n-的supernode" class="headerlink" title="国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n 的supernode"></a>国外的supernode慢，延迟都快1s了，ssh打字都卡，借助开源硬件，在家自建了一个n2n 的supernode</h2><h1 id="地址：ustc-gq-2000-或-ngrok-iok-la-2000"><a href="#地址：ustc-gq-2000-或-ngrok-iok-la-2000" class="headerlink" title="地址：ustc.gq:2000 或 ngrok.iok.la:2000"></a>地址：<a target="_blank" rel="noopener" href="http://ustc.gq:2000/">ustc.gq:2000</a> 或 <a target="_blank" rel="noopener" href="http://ngrok.iok.la:2000/">ngrok.iok.la:2000</a></h1><h1 id="协议版本-n2n-v2-端口-2000"><a href="#协议版本-n2n-v2-端口-2000" class="headerlink" title="协议版本:n2n_v2          端口:2000"></a>协议版本:n2n_v2          端口:2000</h1><h4 id="补充：什么是n2n"><a href="#补充：什么是n2n" class="headerlink" title="补充：什么是n2n?"></a><span style="color: #ff0000;"><em><strong>补充：什么是n2n?</strong></em></span></h4><h1 id="n2n内网穿透神器"><a href="#n2n内网穿透神器" class="headerlink" title="n2n内网穿透神器"></a>n2n内网穿透神器</h1><h1 id="n2n用途"><a href="#n2n用途" class="headerlink" title="n2n用途"></a>n2n用途</h1><p>假如想实现远程访问，访问家里的路由、电脑，等等设备，最简单的方式就是采用端口映射（端口转发），但是很多情况下我们没有路由的权限，这样根本就没有办法访问私网，因为受网关的保护。</p>
+<p>本想通过sock请求来发送的，但是实现起来必须是内网主动发起，不能外网主动发起，可以保持长连接来通信，但是还是有很多的局限性。放弃采用。</p>
+<p>考虑过VPN，但是VPN配置还是比较复杂，不能做到随意使用，放弃。</p>
+<p>这时N2N进入了我的视野，其实就是P2P协议，及点对点协议，实现UDP打洞。</p>
+<span id="more"></span>
+
+<p>原理图如下：</p>
+<p><a target="_blank" rel="noopener" href="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/1.png"><img src="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/1.png" alt="1"></a></p>
+<p><a target="_blank" rel="noopener" href="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/2.jpg"><img src="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/2.jpg" alt="2"></a></p>
+<p>N2N分两个部分，一个是supernode,一个是edge。supernode即中心节点，edge 即边缘节点，supernode的作用就是对两个edge节点进行连接的作用，和p2p服务器作用一样，且n2n数据是不走supernode的，所以数据很安全。</p>
+<h1 id="配置N2N"><a href="#配置N2N" class="headerlink" title="配置N2N"></a>配置N2N</h1><p><strong>注意：不要使用yum或者apt-get还安装n2n（下面待会儿说）</strong></p>
+<p>我一开始也是 使用yum install n2n安装的，结果中间发生很多问题。</p>
+<p>这里尽量采用源码包编译安装。</p>
+<p>在supernode和edge 节点运行下面命令</p>
+<div>
+<div id="highlighter_976067" class="syntaxhighlighter bash">
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div></td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2">`svn co https:``//svn``.ntop.org``/svn/ntop/trunk/n2n`</div>
+<div class="line number2 index1 alt1">`cd` `n2n``/n2n_v1/`</div>
+<div class="line number3 index2 alt2">`make` `&amp;&amp; ``make` `install`</div>
+<div class="line number4 index3 alt1">`cp` `supernode ``/usr/sbin/`</div>
+<div class="line number5 index4 alt2">`cp` `edge ``/usr/sbin/`</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+如果没有安装svn的话执行下面的命令
+<div>
+<div id="highlighter_573713" class="syntaxhighlighter bash">
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div></td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2">`yum ``install` `subversion`</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<h1 id="启用N2N"><a href="#启用N2N" class="headerlink" title="启用N2N"></a>启用N2N</h1><h2 id="启用中心节点-supernode"><a href="#启用中心节点-supernode" class="headerlink" title="启用中心节点(supernode)"></a>启用中心节点(supernode)</h2><div>
+<div id="highlighter_821675" class="syntaxhighlighter bash">
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div></td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2">`supernode -l 2000 -``v`</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+2000即开发给边缘节点的端口
+
+<p>如果采用我的中心节点，您只需要在两台机器上面运行edge ，这样两台内网机器直接互通，由于数据不走中心节点，所以数据很安全。（<strong>不保证节点能一直运行下去</strong>）</p>
+<p>example:</p>
+<p>edge -d n2n0 -c mynetwork -k encryptme -a 10.1.12.1 -l ustc.gq:2000 &gt;/dev/null &amp;</p>
+<h2 id="启用边缘节点-edge"><a href="#启用边缘节点-edge" class="headerlink" title="启用边缘节点(edge)"></a>启用边缘节点(edge)</h2><p>在需要加入n2n的机器上执行</p>
+<div>
+<div id="highlighter_825177" class="syntaxhighlighter bash">
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div></td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2">`edge -d n2n0 -c mynetwork -k encryptme -a 10.1.12.1 -l 1.2.3.4:8080`</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+-a 参数 是指指定一个IP给边缘节点
+
+<p>如果出现如下信息表示成功了</p>
+<p><a target="_blank" rel="noopener" href="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/20150211114821.png"><img src="https://dn-phpbulo.qbox.me/wp-content/uploads/2015/02/20150211114821.png" alt="20150211114821"></a></p>
+<p>您还可以再次加入其他edge节点，这样节点与节点可以互相ping 通</p>
+<p>再次在第2节点上运行如下命令<br>edge -d n2n0 -c mynetwork -k encryptme -a 10.1.12.2 -l 1.2.3.4:808<br>0</p>
+<p>如果成功的话 在 第一个节点上面进行ping第二个节点是能互相通的。</p>
+<p>以上命令也可以放入后台执行</p>
+<p>supernode -l 8080  &gt;/dev/null &amp;</p>
+<p>edge -d n2n0 -c mynetwork -k encryptme -a 10.1.12.1 -l 1.2.3.4:8080 &gt;/dev/null &amp;</p>
+<p>1.2.3.4是指中心节点ip</p>
+<p>运行 supernode 的时候可以带上-v 参数，来查看报错情况。</p>
+<h1 id="关于可能遇到的错误"><a href="#关于可能遇到的错误" class="headerlink" title="关于可能遇到的错误"></a>关于可能遇到的错误</h1><p>问：我有一个中心节点 一个边缘节点，加入之后为什么中心节点不能ping通边缘节点的ip？</p>
+<p>答：这中情况下一般是中心节点没有去运行边缘节点。需要在中心节点加入edge边缘节点，参考上面的边缘节点运行方式，加入后重新ping试试。</p>
+<p>若出现如下错误</p>
+<div>
+<div id="highlighter_22103" class="syntaxhighlighter bash">
+<table border="0" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div></td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2">`11``/Feb/2015` `00:05:42 [ sn.c: 409] ERROR: Failed to decode common section`</div>
+<div class="line number2 index1 alt1">`11``/Feb/2015` `00:06:37 [ n2n.c: 303] Purging old registrations`</div>
+<div class="line number3 index2 alt2">`11``/Feb/2015` `00:06:37 [ n2n.c: 308] Remove 0 registrations`</div>
+<div class="line number4 index3 alt1">`11``/Feb/2015` `00:06:42 [ sn.c: 409] ERROR: Failed to decode common section`</div>
+</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+很可能能你用的是yum 和编译的造成的版本不一致造成的，这也是 一开始为什强调不要使用yum 和复制两个文件到/usr/sbin的原因，尽量使用make 后的命令make 后会在 当前目录下面生产supernode,edge文件把它覆盖到系统变量目录下面。
+
+<p>参考上面编译源码部分。</p>
+<p>本教程基于N2N_V1版本，安装V2版本同样适用，但是v1和v2是不能相通的，也就是说必须运行同一版本。</p>
+<p>n2n还有很多客户端，比如android和win客户端，安卓下面可以到googleplay上下载。相当简单这里不多介绍。</p>
+<p>n2n作为端口穿透确实是个神器，后面我可以用我的树莓派来做只能家居了，很期待。</p>
+<p>&nbsp;</p>
+<h4 id="n2n介绍文章转载自https-www-phpbulo-com-archives-655-html-特此感谢"><a href="#n2n介绍文章转载自https-www-phpbulo-com-archives-655-html-特此感谢" class="headerlink" title="n2n介绍文章转载自https://www.phpbulo.com/archives/655.html,特此感谢"></a><span style="color: #0000ff;">n2n介绍文章转载自<a target="_blank" rel="noopener" href="https://www.phpbulo.com/archives/655.html">https://www.phpbulo.com/archives/655.html,特此感谢</a></span></h4><h3 id><a href="#" class="headerlink" title></a></h3>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/old-blog/tags/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/" rel="tag"># 技术分享</a>
+              <a href="/old-blog/tags/linux/" rel="tag"># linux</a>
+              <a href="/old-blog/tags/linux%E6%8A%80%E6%9C%AF/" rel="tag"># linux技术</a>
+              <a href="/old-blog/tags/%E6%8A%80%E6%9C%AF/" rel="tag"># 技术</a>
+              <a href="/old-blog/tags/%E5%9F%9F%E5%90%8D%E5%BB%BA%E7%AB%99/" rel="tag"># 域名建站</a>
+              <a href="/old-blog/tags/nanopi%E7%9B%B8%E5%85%B3/" rel="tag"># nanopi相关</a>
+              <a href="/old-blog/tags/n2n/" rel="tag"># n2n</a>
+              <a href="/old-blog/tags/%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F/" rel="tag"># 内网穿透</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/old-blog/2016/09/28/history/%E5%9B%9B%E4%B8%AA%E7%9C%9F%E6%AD%A3%E7%9A%84%E5%85%8D%E8%B4%B9%E9%A1%B6%E7%BA%A7%E5%9F%9F%E5%90%8D/" rel="prev" title="四个真正的免费顶级域名">
+                  <i class="fa fa-chevron-left"></i> 四个真正的免费顶级域名
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/old-blog/2016/10/03/history/blog-%E6%A0%B9%E5%9F%9F%E5%90%8D%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%9B%BD%E9%99%85%E7%BA%BF%E8%B7%AF%E6%97%A5%E5%B8%B8%E6%8A%BD%E9%A3%8E/" rel="next" title="根域名服务器国际线路日常抽风">
+                  根域名服务器国际线路日常抽风 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    
+  <div class="comments" id="disqus_thread">
+    <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class=""></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhZhy</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/old-blog/js/utils.js"></script><script src="/old-blog/js/motion.js"></script><script src="/old-blog/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+  <script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'none'
+      },
+      options: {
+        renderActions: {
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              const target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-mml-chtml.js';
+    script.defer = true;
+    document.head.appendChild(script);
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.typesetClear();
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://http-zhzhy-top.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://zhzhzhy.github.io/old-blog/2016/09/28/history/%E8%87%AA%E5%BB%BAn2n-supernode-%E5%9B%BD%E5%86%85n2n-supernode/";
+    this.page.identifier = "2016/09/28/history/自建n2n-supernode-国内n2n-supernode/";
+    this.page.title = "自建n2n supernode (国内n2n supernode)";
+    };
+  NexT.utils.loadComments('#disqus_thread', () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://http-zhzhy-top.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</body>
+</html>
