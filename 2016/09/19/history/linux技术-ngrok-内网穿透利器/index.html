@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/old-blog/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/old-blog/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/old-blog/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/old-blog/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/old-blog/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"zhzhzhy.github.io","root":"/old-blog/","images":"/old-blog/images","scheme":"Pisces","version":"8.3.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+<meta name="description" content="由于开发Web项目，经常需要将本地部署的网站让外网能直接访问到，最便捷的做法当然是在ADSL路由器上直接做端口映射，很不幸大部分运 营商都屏蔽了80等常用端口，曾经的做法是在公网一台VPS上架设OpenVPN，将笔记本和VPS连到一个虚拟局域网，再用iptables做端口转发 来达到目的，虽然可行，但速度比较慢，由于线路不稳定造成掉线几率较高。偶然发现还有个叫ngrok的神器专门做了这件事，不但提">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ngrok 内网穿透利器">
+<meta property="og:url" content="https://zhzhzhy.github.io/old-blog/2016/09/19/history/linux%E6%8A%80%E6%9C%AF-ngrok-%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E5%88%A9%E5%99%A8/index.html">
+<meta property="og:site_name" content="ZhZhY的博客 | ZhZhY&#39;s">
+<meta property="og:description" content="由于开发Web项目，经常需要将本地部署的网站让外网能直接访问到，最便捷的做法当然是在ADSL路由器上直接做端口映射，很不幸大部分运 营商都屏蔽了80等常用端口，曾经的做法是在公网一台VPS上架设OpenVPN，将笔记本和VPS连到一个虚拟局域网，再用iptables做端口转发 来达到目的，虽然可行，但速度比较慢，由于线路不稳定造成掉线几率较高。偶然发现还有个叫ngrok的神器专门做了这件事，不但提">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2016-09-19T22:28:11.000Z">
+<meta property="article:modified_time" content="2021-04-15T12:14:56.228Z">
+<meta property="article:author" content="ZhZhy">
+<meta property="article:tag" content="linux技术">
+<meta property="article:tag" content="ngrok">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://zhzhzhy.github.io/old-blog/2016/09/19/history/linux%E6%8A%80%E6%9C%AF-ngrok-%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E5%88%A9%E5%99%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+<title>ngrok 内网穿透利器 | ZhZhY的博客 | ZhZhY's</title>
+  
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><link rel="alternate" href="/old-blog/atom.xml" title="ZhZhY的博客 | ZhZhY's" type="application/atom+xml"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/old-blog/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">ZhZhY的博客 | ZhZhY's</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">愿你出走半生，归来仍是少年</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-主页-home"><a href="/old-blog/" rel="section"><i class="fa fa-home fa-fw"></i>主页 Home</a></li>
+        <li class="menu-item menu-item-关于我-about"><a href="/old-blog/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于我 About</a></li>
+        <li class="menu-item menu-item-相册-photo"><a href="https://zhzhy.tuchong.com/" rel="noopener" target="_blank"><i class="fa fa-picture-o fa-fw"></i>相册 Photo</a></li>
+        <li class="menu-item menu-item-标签-tags"><a href="/old-blog/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签 Tags</a></li>
+        <li class="menu-item menu-item-分类-category"><a href="/old-blog/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类 Category</a></li>
+        <li class="menu-item menu-item-回望我的过去-archives"><a href="/old-blog/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>回望我的过去 Archives</a></li>
+        <li class="menu-item menu-item-小工具-tools"><a href="/old-blog/tools/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>小工具 Tools</a></li>
+        <li class="menu-item menu-item-sitemap"><a href="/old-blog/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="ZhZhy"
+      src="/old-blog/assets/img/avatar.jpg">
+  <p class="site-author-name" itemprop="name">ZhZhy</p>
+  <div class="site-description" itemprop="description">geek猫，中国科大14级，南七技校工科男一枚。不知名博主，擅长linux运维，爱好摄影，歌风民谣，专业力学</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/old-blog/archives">
+          <span class="site-state-item-count">74</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/old-blog/categories/">
+        <span class="site-state-item-count">74</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/old-blog/tags/">
+        <span class="site-state-item-count">67</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhzhzhy" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhzhzhy" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:by6dx1@gmail.com" title="E-Mail → mailto:by6dx1@gmail.com" rel="noopener" target="_blank"><i class="fab fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://instagram.com/geek.cat.zzy" title="Instagram → https:&#x2F;&#x2F;instagram.com&#x2F;geek.cat.zzy" rel="noopener" target="_blank"><i class="fab fa-instagram fa-fw"></i>Instagram</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://open.spotify.com/artist/2fbUQIKSBTohTK6tHaFGYV?si=A2OzzFvPTjOVYcHiilCOWA" title="Spotify → https:&#x2F;&#x2F;open.spotify.com&#x2F;artist&#x2F;2fbUQIKSBTohTK6tHaFGYV?si&#x3D;A2OzzFvPTjOVYcHiilCOWA" rel="noopener" target="_blank">Spotify</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://zhzhzhy.github.io/old-blog/2016/09/19/history/linux%E6%8A%80%E6%9C%AF-ngrok-%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E5%88%A9%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/old-blog/assets/img/avatar.jpg">
+      <meta itemprop="name" content="ZhZhy">
+      <meta itemprop="description" content="geek猫，中国科大14级，南七技校工科男一枚。不知名博主，擅长linux运维，爱好摄影，歌风民谣，专业力学">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhZhY的博客 | ZhZhY's">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ngrok 内网穿透利器
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2016-09-19 22:28:11" itemprop="dateCreated datePublished" datetime="2016-09-19T22:28:11+00:00">2016-09-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/old-blog/categories/linux%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">linux技术</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/old-blog/categories/linux%E6%8A%80%E6%9C%AF/ngrok/" itemprop="url" rel="index"><span itemprop="name">ngrok</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/old-blog/2016/09/19/history/linux%E6%8A%80%E6%9C%AF-ngrok-%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E5%88%A9%E5%99%A8/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/09/19/history/linux技术-ngrok-内网穿透利器/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>由于开发<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">Web</span></span></span>项目，经常需要将本地部署的网站让外网能直接访问到，最便捷的做法当然是在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ADSL</span></span></span>路由器上直接做端口映射，很不幸大部分运 营商都屏蔽了<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">80</span></span></span>等常用端口，曾经的做法是在公网一台<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">VPS</span></span></span>上架设<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">OpenVPN</span></span></span>，将笔记本和<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">VPS</span></span></span>连到一个虚拟局域网，再用<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">iptables</span></span></span>做端口转发 来达到目的，虽然可行，但速度比较慢，由于线路不稳定造成掉线几率较高。偶然发现还有个叫<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>的神器专门做了这件事，不但提供了一个在外网能够安全 的访问内网<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">Web</span></span></span>主机，还能捕获所有请求的<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http</span></span></span>内容，方便调试，甚至还支持<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">tcp</span></span></span>层端口映射，不局限于某一特定的服务。支持<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">Mac OS X</span></span></span>，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">Linux</span></span></span>，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">Windows</span></span></span>平台。</p>
+<span id="more"></span>
+
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><strong>1. ngrok</strong></span></span></span><strong>下载运行</strong></p>
+<p>体积很小，<a target="_blank" rel="noopener" href="https://ngrok.com/">官网</a>下载后直接解压得到一个二进制文件，在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">shell</span></span></span>中执行<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">./ngrok 80</span></span></span>即可，默认会分配随机的二级域名来访问，转发到本机的<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">80</span></span></span>端口。可以通过<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">-help</span></span></span>参数来查看详细的说明，运行后如下提示：</p>
+<p id="highlighter_725697" dir="ltr">
+<table width="643" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="643"> </colgroup>
+<tbody>
+<tr>
+<td width="643"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`Tunnel Status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; online`</span></span></span>
+
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>Version&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 1.6/1.5</code></span></span></span></p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>Forwarding&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; http://steven-mbp.ngrok.com -&amp;gt; 127.0.0.1:8080</code></span></span></span></p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>Forwarding&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; https://steven-mbp.ngrok.com -&amp;gt; 127.0.0.1:8080</code></span></span></span></p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>Web Interface&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 127.0.0.1:4040</code></span></span></span></p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code># Conn&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 16</code></span></span></span></p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>Avg Conn Time&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; 558ms</code></span></span></span></p></td></tr></tbody></table></p>
+
+
+
+我这里是使用了自定义二级域名，意味着访问<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http://steven-mbp.ngrok.com</span></span></span>就如同访问内网的<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http: //127.0.0.1:8080</span></span></span>，很方便吧。通过<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>提供的管理界面<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">(127.0.0.1:4040)</span></span></span>可以清楚的看到当前有哪些连接，以及请求的 <span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">url</span></span></span>，可以进行<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">replay</span></span></span>。
+> <span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">2\. ngrok</span></span></span>常用示例
+<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">1\. </span></span></span>采用自定义二级域名<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">steven-mbp.ngrok.com</span></span></span>转发到本机的<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">8080</span></span></span>端口。
+
+<p id="highlighter_474534" dir="ltr">
+<table width="331" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="331"> </colgroup>
+<tbody>
+<tr>
+<td width="331"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`./ngrok -subdomain steven-mbp 8080`</span></span></span></td>
+</tr>
+</tbody>
+</table>
+<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">2\. tcp</span></span></span>端口转发，这意味着可以在外网<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ssh</span></span></span>到本机了，当然外网端口是随机分配的。
+
+</p><p id="highlighter_397145" dir="ltr">
+<table width="206" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="206"> </colgroup>
+<tbody>
+<tr>
+<td width="206"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`./ngrok -proto=tcp 22`</span></span></span></td>
+</tr>
+</tbody>
+</table>
+<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">3\. </span></span></span>转发到局域网其他的机器
+
+</p><p id="highlighter_640615" dir="ltr">
+<table width="214" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="214"> </colgroup>
+<tbody>
+<tr>
+<td width="214"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`./ngrok 192.168.0.1:80`</span></span></span></td>
+</tr>
+</tbody>
+</table>
+<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">4\. </span></span></span>绑定顶级域名<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">(</span></span></span>付费才可用<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">)</span></span></span>，在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">dashboard</span></span></span>中添加域名，将域名<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">cname</span></span></span>解析到<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok.com</span></span></span>即可。
+
+</p><p id="highlighter_409763" dir="ltr">
+<table width="369" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="369"> </colgroup>
+<tbody>
+<tr>
+<td width="369"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`./ngrok -hostname test.dorole.com 8080`</span></span></span></td>
+</tr>
+</tbody>
+</table>
+<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">**3\. ngrok**</span></span></span>**配置文件**
+
+</p><p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>可以将参数写到文件中，默认是放在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">~/.ngrok</span></span></span>。例如：</p>
+<p id="highlighter_366531" dir="ltr">
+<table width="204" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="204"> </colgroup>
+<tbody>
+<tr>
+<td width="204"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`tunnels:`</span></span></span>
+
+<p><code>&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>client:</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>auth: &quot;user:password&quot;</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>proto:</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>https: 8080</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>ssh:</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>proto: </code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>tcp: 22</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>test.dorole.com</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>proto:</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>http: 9090</code></span></span></span></p></td></tr></tbody></table></p>
+
+
+
+这里定义了三个隧道，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">client</span></span></span>表示转发<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http</span></span></span>到本机<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">8080</span></span></span>，同时要求验证，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ssh</span></span></span>表示支持远程访问，第三个是绑定了域名转发到 <span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">9090</span></span></span>。这时候只需要一个<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">./ngrok start client ssh test.dorole.com</span></span></span>即可快速启动这三个隧道服务。
+
+<p>每一个隧道的配置节点都有五个参数，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">proto</span></span></span>，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">subdomain</span></span></span>，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">auth</span></span></span>，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">hostname</span></span></span>和<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">remote_port</span></span></span>，每个隧道必须有 <span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">proto</span></span></span>参数来指定本地地址和端口。<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">auth</span></span></span>参数用于在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http(s)</span></span></span>中身份认证，而<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">remote_port</span></span></span>用于在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">tcp</span></span></span>隧道中指定远程服务器端口。如 果没有配置<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">subdomain</span></span></span>参数，<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>会默认一个二级域名与隧道节点一样的名字。</p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">**4. **</span></span></span><strong>配置文件中的其他参数</strong></p>
+<p id="highlighter_863614" dir="ltr">
+<table width="273" cellspacing="0" cellpadding="0">
+<colgroup>
+<col width="273"> </colgroup>
+<tbody>
+<tr>
+<td width="273"><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">`authtoken: abc123`</span></span></span>
+
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>inspect_addr: &quot;0.0.0.0:8888&quot;</code></span></span></span></p>
+<p><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>tunnels:</code></span></span></span></p>
+<p><code>&amp;nbsp;&amp;nbsp;</code><span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><code>...</code></span></span></span></p></td></tr></tbody></table></p>
+
+
+
+<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">authtoken</span></span></span>用于设置登录<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>的授权码，可以在<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>首页的<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">dashboard</span></span></span>中查看到。<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">inspect_addr</span></span></span>用于设置监 听<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ip</span></span></span>，比如设置为<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">0.0.0.0:8080</span></span></span>意味着监听本机所有<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ip</span></span></span>的<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">8080</span></span></span>端口上。<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>也支持自己架设<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrokd</span></span></span>服务器，在配置中通过 <span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">server_addr: “dorole.com:8081″</span></span></span>来指定自己搭建的服务器地址。设置<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">trust_host_root_certs: true</span></span></span>来支持<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">TLS</span></span></span>加密协议的证书信任。<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>支持<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http proxy</span></span></span>，可以将<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">ngrok</span></span></span>配置成一个<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US">http</span></span></span>代理，这在本机网络受限制的地方用比较合适。
+
+<p>官网：<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><a target="_blank" rel="noopener" href="https://ngrok.com/dashboard">https://ngrok.com/</a> </span></span></span></p>
+<p>以上内容转载自<span style="font-family: Liberation Serif,serif;"><span style="font-size: medium;"><span lang="en-US"><a target="_blank" rel="noopener" href="http://dorole.com/1233/">http://dorole.com/1233/</a></span></span></span>，特此感谢</p>
+<p>&nbsp;</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/old-blog/tags/linux%E6%8A%80%E6%9C%AF/" rel="tag"># linux技术</a>
+              <a href="/old-blog/tags/ngrok/" rel="tag"># ngrok</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/old-blog/2016/09/19/history/linux%E6%8A%80%E6%9C%AF-Nanopi-%E5%BB%BA%E7%AB%99%E4%BD%93%E4%BC%9A/" rel="prev" title="Nanopi 建站体会">
+                  <i class="fa fa-chevron-left"></i> Nanopi 建站体会
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/old-blog/2016/09/19/history/hosts%E7%9B%B8%E5%85%B3-hosts/" rel="next" title="hosts">
+                  hosts <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    
+  <div class="comments" id="disqus_thread">
+    <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class=""></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhZhy</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/pisces/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/old-blog/js/utils.js"></script><script src="/old-blog/js/motion.js"></script><script src="/old-blog/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+  <script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'none'
+      },
+      options: {
+        renderActions: {
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              const target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.1.2/es5/tex-mml-chtml.js';
+    script.defer = true;
+    document.head.appendChild(script);
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.typesetClear();
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://http-zhzhy-top.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "https://zhzhzhy.github.io/old-blog/2016/09/19/history/linux%E6%8A%80%E6%9C%AF-ngrok-%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E5%88%A9%E5%99%A8/";
+    this.page.identifier = "2016/09/19/history/linux技术-ngrok-内网穿透利器/";
+    this.page.title = "ngrok 内网穿透利器";
+    };
+  NexT.utils.loadComments('#disqus_thread', () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://http-zhzhy-top.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</body>
+</html>
